@@ -68,7 +68,7 @@
     }
 
     /* =========================================================
-       Ambient overlays (shimmer, noise, scanlines, vignette)
+       Ambient overlays (shimmer, noise, scanlines, vignette, embers, fog)
        ========================================================= */
     .flame-shimmer {
       position: fixed;
@@ -123,6 +123,47 @@
       z-index: 4;
     }
 
+    .embers {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background-image:
+        radial-gradient(2px 2px at 15% 20%, rgba(255,255,255,0.15), transparent 60%),
+        radial-gradient(1.5px 1.5px at 40% 45%, rgba(255,255,255,0.12), transparent 60%),
+        radial-gradient(2px 2px at 70% 30%, rgba(255,255,255,0.16), transparent 60%),
+        radial-gradient(1.6px 1.6px at 85% 65%, rgba(255,255,255,0.14), transparent 60%),
+        radial-gradient(1.8px 1.8px at 25% 80%, rgba(255,255,255,0.12), transparent 60%);
+      animation: embersFloat 24s linear infinite;
+      opacity: 0.28;
+    }
+    @keyframes embersFloat {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+
+    .fog {
+      position: fixed;
+      inset: -20% -20% -20% -20%;
+      background:
+        radial-gradient(60% 60% at 20% 20%, rgba(255,255,255,0.04), transparent 60%),
+        radial-gradient(50% 50% at 80% 70%, rgba(255,255,255,0.03), transparent 65%);
+      filter: blur(6px);
+      mix-blend-mode: screen;
+      animation: fogMove 60s ease-in-out infinite;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.25;
+    }
+    @keyframes fogMove {
+      0%   { transform: translate(0,0); }
+      25%  { transform: translate(-30px, 20px); }
+      50%  { transform: translate(30px, -18px); }
+      75%  { transform: translate(-20px, -8px); }
+      100% { transform: translate(0,0); }
+    }
+
     /* =========================================================
        Foreground blood drips (stylized, non-graphic)
        ========================================================= */
@@ -139,10 +180,10 @@
       filter: drop-shadow(0 0 6px rgba(193,0,0,0.28));
       z-index: 9;
     }
-    .blood-drip:nth-of-type(1) { left: 10%; animation-delay: 0s;   }
-    .blood-drip:nth-of-type(2) { left: 18%; animation-delay: 0.4s; }
-    .blood-drip:nth-of-type(3) { left: 26%; animation-delay: 0.8s; }
-    .blood-drip:nth-of-type(4) { left: 34%; animation-delay: 1.2s; }
+    .blood-drip:nth-of-type(1) { left: 8%;  animation-delay: 0s;   }
+    .blood-drip:nth-of-type(2) { left: 16%; animation-delay: 0.4s; }
+    .blood-drip:nth-of-type(3) { left: 24%; animation-delay: 0.8s; }
+    .blood-drip:nth-of-type(4) { left: 36%; animation-delay: 1.2s; }
     .blood-drip:nth-of-type(5) { left: 48%; animation-delay: 1.6s; }
     .blood-drip:nth-of-type(6) { left: 60%; animation-delay: 2.0s; }
     .blood-drip:nth-of-type(7) { left: 74%; animation-delay: 2.4s; }
@@ -162,7 +203,7 @@
       display: grid;
       place-items: center;
       height: 100%;
-      padding: 2.6rem;
+      padding: 2.8rem;
       position: relative;
       z-index: 10; /* above ambient layers */
     }
@@ -361,6 +402,11 @@
     /* =========================================================
        Responsive tweaks
        ========================================================= */
+    @media (max-width: 1024px) {
+      .wrap { padding: 2.4rem; }
+      .panel { width: min(900px, 95vw); }
+    }
+
     @media (max-width: 860px) {
       .panel { width: min(840px, 94vw); }
       .content { padding: 2.2rem; }
@@ -388,7 +434,7 @@
        ========================================================= -->
   <div class="fire-wrap" aria-hidden="true">
     <video class="fire-video" autoplay loop muted playsinline>
-      <!-- Provide your own blue fire mp4 for best realism (kept empty by default) -->
+      <!-- Provide your own blue fire MP4 for best realism (kept empty by default) -->
       <source src="" type="video/mp4">
     </video>
     <div class="fire-fallback" aria-hidden="true"></div>
@@ -401,6 +447,8 @@
   <div class="noise" aria-hidden="true"></div>
   <div class="scanlines" aria-hidden="true"></div>
   <div class="vignette" aria-hidden="true"></div>
+  <div class="embers" aria-hidden="true"></div>
+  <div class="fog" aria-hidden="true"></div>
 
   <!-- =========================================================
        Foreground blood drips
@@ -434,7 +482,7 @@
         <p class="subtitle">Enter if you dare.</p>
 
         <div id="story" class="story" aria-live="polite">
-          <!-- Initial split-second trap message -->
+          <!-- Initial trap message (shows for 0.5s) -->
           <div id="line" class="line">Nm trying to save you don't go anywhere</div>
 
           <!-- Controls -->
@@ -494,12 +542,12 @@
       setTimeout(() => { line.style.opacity = 1; }, 40);
     }
 
-    // Trap message shows initially; after ~3s reveal sequence
+    // Trap message shows initially; after ~0.5s reveal sequence
     setTimeout(() => {
       index = 0;
       setLine(index);
       next.style.display = 'inline-block';
-    }, 3000);
+    }, 500);
 
     // Cycle lines on button press
     next.addEventListener('click', () => {
@@ -509,6 +557,7 @@
   </script>
 </body>
 <HTML>
+
 
 
   
