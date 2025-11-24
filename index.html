@@ -1,213 +1,657 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- =========================================================
+       Meta + Title
+       ========================================================= -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Blast File</title>
+
+  <!-- =========================================================
+       Fonts
+       ========================================================= -->
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@300;600&display=swap" rel="stylesheet">
+
   <style>
+    /* =========================================================
+       Theme variables
+       ========================================================= */
     :root {
       --bg: #0a0a0d;
       --fg: #e6e6e6;
       --muted: #9aa0a6;
       --accent: #7b00ff;
       --blood: #c10000;
-      --glow: rgba(123, 0, 255, 0.45);
-      --warning: #ff3b3b;
+      --blue: #0096ff;
+      --glow: rgba(0, 150, 255, 0.45); /* blue glow */
+      --panel-bg: rgba(5, 5, 10, 0.82);
+      --panel-border: rgba(255,255,255,0.06);
+      --btn-bg-a: rgba(18,18,28,0.95);
+      --btn-bg-b: rgba(10,10,16,0.95);
+      --shadow-soft: rgba(0,0,0,0.35);
+      --shadow-strong: rgba(0,0,0,0.85);
     }
 
+    /* =========================================================
+       Base layout
+       ========================================================= */
     html, body {
       height: 100%;
       margin: 0;
-      background: black url('https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif') center/cover no-repeat;
       color: var(--fg);
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       overflow: hidden;
+      /* Blue realistic fire background (animated, fixed) */
+      background: #000 url('https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif') center/cover no-repeat fixed;
+      /* fallback color in case gif fails */
+      background-color: #000;
     }
 
-    /* Noise overlay */
+    /* =========================================================
+       Ambient layers (noise, flame shimmer, scanlines, vignette)
+       ========================================================= */
     .noise {
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100" height="100" filter="url(%23n)" opacity="0.03"/></svg>');
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" stitchTiles="stitch"/></filter><rect width="120" height="120" filter="url(%23n)" opacity="0.03"/></svg>');
       mix-blend-mode: soft-light;
-      animation: drift 20s linear infinite;
+      animation: drift 22s linear infinite;
+      z-index: 1;
     }
+
     @keyframes drift {
       0% { transform: translate(0,0); }
-      50% { transform: translate(50px, -20px); }
+      33% { transform: translate(45px, -18px); }
+      66% { transform: translate(-22px, 12px); }
       100% { transform: translate(0,0); }
     }
 
+    .flame-shimmer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(0,150,255,0.06) 0%, transparent 40%),
+        radial-gradient(800px 500px at 80% 90%, rgba(0,120,255,0.05) 0%, transparent 55%);
+      mix-blend-mode: screen;
+      animation: shimmer 12s ease-in-out infinite;
+      z-index: 2;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.35; transform: translate(0,0); }
+      50% { opacity: 0.58; transform: translate(14px, -10px) scale(1.03); }
+    }
+
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 3px);
+      background-size: 100% 6px;
+      opacity: 0.07;
+      mix-blend-mode: soft-light;
+      z-index: 3;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(0,0,0,0.65) 100%),
+        radial-gradient(120% 120% at 30% 10%, transparent 50%, rgba(0,0,0,0.55) 100%);
+      z-index: 0;
+    }
+
+    /* =========================================================
+       Floating ash embers (subtle dots drifting)
+       ========================================================= */
+    .embers {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background-image:
+        radial-gradient(2px 2px at 15% 20%, rgba(255,255,255,0.15), transparent 60%),
+        radial-gradient(1.5px 1.5px at 40% 45%, rgba(255,255,255,0.12), transparent 60%),
+        radial-gradient(2px 2px at 70% 30%, rgba(255,255,255,0.16), transparent 60%),
+        radial-gradient(1.6px 1.6px at 85% 65%, rgba(255,255,255,0.14), transparent 60%),
+        radial-gradient(1.8px 1.8px at 25% 80%, rgba(255,255,255,0.12), transparent 60%);
+      animation: embersFloat 24s linear infinite;
+      opacity: 0.28;
+    }
+
+    @keyframes embersFloat {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* =========================================================
+       Page wrapper + panel
+       ========================================================= */
     .wrap {
       display: grid;
       place-items: center;
       height: 100%;
-      padding: 2rem;
+      padding: 2.8rem;
+      position: relative;
+      z-index: 4; /* above ambient layers */
     }
 
     .panel {
-      width: min(720px, 92vw);
-      border-radius: 12px;
-      background: rgba(5, 5, 10, 0.8);
-      box-shadow: 0 0 60px -10px var(--glow);
-      backdrop-filter: blur(6px);
+      width: min(860px, 94vw);
+      border-radius: 18px;
+      background: var(--panel-bg);
+      box-shadow:
+        0 0 0 1px var(--panel-border),
+        0 10px 45px -10px var(--shadow-strong),
+        0 0 60px -10px var(--glow);
+      backdrop-filter: blur(10px);
       position: relative;
       overflow: hidden;
+    }
+
+    /* Decorative energy glow layers inside panel */
+    .panel::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background:
+        conic-gradient(from 220deg at 60% 40%, rgba(0,150,255,0.18), transparent 30%, rgba(193,0,0,0.12) 60%, transparent 80%),
+        radial-gradient(600px 180px at 75% 0%, rgba(0,150,255,0.20), transparent 60%);
+      filter: blur(16px);
+      z-index: 0;
+    }
+
+    .panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(140% 140% at 10% 10%, rgba(0,150,255,0.06), transparent 45%),
+        radial-gradient(120% 120% at 90% 95%, rgba(0,150,255,0.05), transparent 45%);
+      z-index: 0;
     }
 
     .content {
       position: relative;
       z-index: 1;
-      padding: 2rem;
+      padding: 2.4rem;
       text-align: center;
     }
 
+    /* =========================================================
+       Typography
+       ========================================================= */
     .title {
       font-family: 'Creepster', cursive;
-      font-size: clamp(2.2rem, 4.8vw, 4rem);
+      font-size: clamp(2.6rem, 5.6vw, 4.7rem);
+      letter-spacing: 0.02em;
       color: var(--fg);
-      text-shadow: 0 0 8px var(--glow), 0 0 14px rgba(193,0,0,0.4);
+      text-shadow:
+        0 0 8px var(--glow),
+        0 0 14px rgba(0,150,255,0.4),
+        0 0 24px rgba(0,150,255,0.25);
       margin: 0 0 0.75rem 0;
     }
 
+    .subtitle {
+      color: var(--muted);
+      font-weight: 300;
+      margin: 0 0 2rem 0;
+      text-shadow: 0 0 6px rgba(0,150,255,0.15);
+      letter-spacing: 0.03em;
+    }
+
+    /* =========================================================
+       Story area
+       ========================================================= */
     .story {
+      display: grid;
       gap: 1.2rem;
       margin-top: 0.5rem;
-      min-height: 160px;
+      min-height: 220px;
+      align-items: start;
+      justify-items: center;
     }
 
     .line {
       font-family: 'Creepster', cursive;
-      font-size: clamp(1.25rem, 3.2vw, 2rem);
+      font-size: clamp(1.45rem, 3.8vw, 2.25rem);
       line-height: 1.35;
       color: var(--fg);
-      text-shadow: 0 0 4px rgba(255,255,255,0.06), 0 0 10px rgba(123,0,255,0.16);
-      animation: appear 400ms ease forwards, flicker 6s linear infinite;
+      text-shadow:
+        0 0 4px rgba(255,255,255,0.06),
+        0 0 10px rgba(0,150,255,0.16);
+      animation: appear 460ms ease forwards, flicker 6s linear infinite;
       opacity: 0;
-    }
-    @keyframes appear {
-      from { opacity: 0; transform: translateY(8px) scale(1.01); filter: blur(2px); }
-      to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-    }
-    @keyframes flicker {
-      0%, 100% { opacity: 1; }
-      10% { opacity: 0.98; }
-      11% { opacity: 0.92; }
-      12% { opacity: 0.99; }
-      35% { opacity: 0.97; }
-      36% { opacity: 0.93; }
-      37% { opacity: 1; }
-      70% { opacity: 0.98; }
-      71% { opacity: 0.95; }
-      72% { opacity: 1; }
+      min-height: 3.4em;
+      display: grid;
+      place-items: center;
+      padding: 0.35rem 0.65rem;
     }
 
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(10px) scale(1.01); filter: blur(2px); }
+      to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    /* Subtle screen flicker */
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      8% { opacity: 0.98; }
+      9% { opacity: 0.92; }
+      10% { opacity: 0.99; }
+      34% { opacity: 0.97; }
+      35% { opacity: 0.93; }
+      36% { opacity: 1; }
+      68% { opacity: 0.98; }
+      69% { opacity: 0.95; }
+      70% { opacity: 1; }
+    }
+
+    /* Final scare style (glitch + blood) */
     .final {
       font-family: 'Creepster', cursive;
       color: var(--blood);
-      text-shadow: 0 0 14px rgba(193,0,0,0.8), 0 0 34px rgba(123,0,255,0.35);
-      animation: glitch 1.8s infinite;
+      text-shadow:
+        0 0 14px rgba(193,0,0,0.95),
+        0 0 34px rgba(0,150,255,0.35),
+        2px 2px 0 #000;
+      letter-spacing: 0.02em;
+      animation: glitch 1.8s infinite, appear 460ms ease forwards;
     }
+
+    /* Glitch effect */
     @keyframes glitch {
-      0% { transform: none; }
-      20% { transform: translate(-2px, 2px); }
-      40% { transform: translate(2px, -2px); }
-      60% { transform: translate(-1px, 1px); }
-      80% { transform: translate(1px, -1px); }
+      0%   { transform: none; }
+      4%   { transform: translate(1px, -1px) skewX(0.6deg); }
+      8%   { transform: translate(-1px, 0.5px) skewX(-0.6deg); }
+      12%  { transform: translate(1px, 1px); }
+      18%  { transform: translate(-2px, -1px); }
+      24%  { transform: none; }
+      30%  { transform: translate(1px, -1px); }
+      44%  { transform: translate(-1px, 1px); }
+      62%  { transform: translate(2px, 0px); }
+      84%  { transform: translate(-1px, -2px); }
       100% { transform: none; }
     }
 
-    button {
-      background: darkred;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1.2em;
+    /* =========================================================
+       Buttons
+       ========================================================= */
+    .btn {
+      position: relative;
+      padding: 0.95rem 1.2rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      color: var(--fg);
+      background: linear-gradient(180deg, var(--btn-bg-a) 0%, var(--btn-bg-b) 100%);
       cursor: pointer;
-      margin-top: 20px;
+      transition: transform 0.05s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+      text-shadow: 0 0 8px rgba(0,150,255,0.25);
     }
-    button:hover { background: crimson; }
 
-    /* Blood drips */
+    .btn:hover {
+      border-color: rgba(0,150,255,0.4);
+      box-shadow: 0 0 24px -8px var(--glow);
+      background: linear-gradient(180deg, rgba(22,22,32,0.98) 0%, rgba(12,12,18,0.98) 100%);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    /* =========================================================
+       Footer tag
+       ========================================================= */
+    .footer {
+      margin-top: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    .tag {
+      font-family: 'Creepster', cursive;
+      color: var(--fg);
+      text-shadow: 0 0 10px var(--glow);
+      font-size: 1.1rem;
+    }
+
+    .divider {
+      width: 28px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    }
+
+    /* =========================================================
+       Blood drips (foreground effect)
+       ========================================================= */
     .blood-drip {
       position: fixed;
       top: 0;
-      width: 8px;
-      height: 100px;
-      background: darkred;
-      animation: drip 4s infinite;
-      opacity: 0.8;
+      width: 12px;
+      height: 140px;
+      background: linear-gradient(180deg, #700000 0%, #8b0000 50%, #3b0000 100%);
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.6);
+      animation: drip 6s infinite;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 6px rgba(193,0,0,0.35));
+      z-index: 99;
     }
-    .blood-drip:nth-child(1) { left: 20%; animation-delay: 0s; }
-    .blood-drip:nth-child(2) { left: 50%; animation-delay: 1s; }
-    .blood-drip:nth-child(3) { left: 80%; animation-delay: 2s; }
+
+    .blood-drip:nth-of-type(1) { left: 8%;  animation-delay: 0s; }
+    .blood-drip:nth-of-type(2) { left: 18%; animation-delay: 0.6s; }
+    .blood-drip:nth-of-type(3) { left: 28%; animation-delay: 1.2s; }
+    .blood-drip:nth-of-type(4) { left: 38%; animation-delay: 1.8s; }
+    .blood-drip:nth-of-type(5) { left: 52%; animation-delay: 2.4s; }
+    .blood-drip:nth-of-type(6) { left: 64%; animation-delay: 3.0s; }
+    .blood-drip:nth-of-type(7) { left: 76%; animation-delay: 3.6s; }
+    .blood-drip:nth-of-type(8) { left: 88%; animation-delay: 4.2s; }
+
+    .blood-drip::after {
+      content: '';
+      position: absolute;
+      left: -4px;
+      bottom: -8px;
+      width: 18px;
+      height: 18px;
+      background: #3b0000;
+      border-radius: 50%;
+      filter: blur(0.5px);
+      opacity: 0.95;
+    }
+
     @keyframes drip {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(600px); opacity: 0; }
+      0%   { transform: translateY(-160px) scaleX(1); opacity: 0; }
+      10%  { opacity: 1; }
+      55%  { transform: translateY(520px) scaleX(1); }
+      70%  { transform: translateY(640px) scaleX(0.94); opacity: 0.85; }
+      100% { transform: translateY(820px) scaleX(0.88); opacity: 0; }
+    }
+
+    /* =========================================================
+       Cursor + hover aura
+       ========================================================= */
+    body, .btn {
+      cursor: crosshair;
+    }
+
+    .hover-aura {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(closest-side, rgba(0,150,255,0.18), transparent);
+      filter: blur(6px);
+      opacity: 0;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.25s ease;
+      z-index: 5;
+    }
+
+    .content:hover .hover-aura {
+      opacity: 1;
+    }
+
+    /* =========================================================
+       Fog overlay (slow moving)
+       ========================================================= */
+    .fog {
+      position: fixed;
+      inset: -20% -20% -20% -20%;
+      background:
+        radial-gradient(60% 60% at 20% 20%, rgba(255,255,255,0.04), transparent 60%),
+        radial-gradient(50% 50% at 80% 70%, rgba(255,255,255,0.03), transparent 65%);
+      filter: blur(6px);
+      mix-blend-mode: screen;
+      animation: fogMove 60s ease-in-out infinite;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.25;
+    }
+
+    @keyframes fogMove {
+      0%   { transform: translate(0,0); }
+      25%  { transform: translate(-30px, 20px); }
+      50%  { transform: translate(30px, -18px); }
+      75%  { transform: translate(-20px, -8px); }
+      100% { transform: translate(0,0); }
+    }
+
+    /* =========================================================
+       Accessibility helpers
+       ========================================================= */
+    .sr-only {
+      position: absolute !important;
+      height: 1px; width: 1px;
+      overflow: hidden;
+      clip: rect(1px, 1px, 1px, 1px);
+      white-space: nowrap;
+    }
+
+    /* =========================================================
+       Responsive tweaks
+       ========================================================= */
+    @media (max-width: 1024px) {
+      .wrap { padding: 2.2rem; }
+      .panel { width: min(900px, 95vw); }
+      .title { font-size: clamp(2.4rem, 5.8vw, 4.4rem); }
+    }
+
+    @media (max-width: 860px) {
+      .panel { width: min(840px, 94vw); }
+      .content { padding: 2.2rem; }
+    }
+
+    @media (max-width: 720px) {
+      .panel { width: 94vw; }
+      .title { font-size: clamp(2.2rem, 6.4vw, 3.8rem); }
+      .line { font-size: clamp(1.25rem, 4.8vw, 1.9rem); }
+      .btn  { padding: 0.85rem 1rem; }
+      .wrap { padding: 1.8rem; }
+    }
+
+    @media (max-width: 540px) {
+      .panel { border-radius: 14px; }
+      .title { font-size: 2rem; }
+      .line { font-size: 1.2rem; }
+      .footer { font-size: 0.95rem; }
+      .subtitle { font-size: 0.95rem; }
+    }
+
+    @media (max-width: 400px) {
+      .panel { border-radius: 12px; }
+      .title { font-size: 1.8rem; }
+      .line { font-size: 1.1rem; }
+      .content { padding: 1.6rem; }
+    }
+
+    /* =========================================================
+       Extra: pulsating blue flame borders (subtle)
+       ========================================================= */
+    .panel-border {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      box-shadow: 0 0 0 1px rgba(0,150,255,0.15), inset 0 0 40px rgba(0,150,255,0.12);
+      animation: borderPulse 8s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    @keyframes borderPulse {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(0,150,255,0.12), inset 0 0 36px rgba(0,150,255,0.1); }
+      50%      { box-shadow: 0 0 0 1px rgba(0,150,255,0.22), inset 0 0 56px rgba(0,150,255,0.22); }
+    }
+
+    /* =========================================================
+       Blue flame highlight behind title
+       ========================================================= */
+    .title-flame {
+      position: absolute;
+      left: 50%;
+      top: 30px;
+      width: 60%;
+      height: 90px;
+      transform: translateX(-50%);
+      background:
+        radial-gradient(closest-side, rgba(0,150,255,0.16), transparent 60%),
+        radial-gradient(closest-side, rgba(0,150,255,0.12), transparent 40%);
+      filter: blur(10px);
+      z-index: 0;
+      opacity: 0.65;
+      animation: titleFlame 10s ease-in-out infinite;
+    }
+
+    @keyframes titleFlame {
+      0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.6; }
+      50% { transform: translateX(-50%) scale(1.06); opacity: 0.78; }
     }
   </style>
 </head>
 <body>
-  <!-- Blood drips -->
-  <div class="blood-drip"></div>
-  <div class="blood-drip"></div>
-  <div class="blood-drip"></div>
+  <!-- =========================================================
+       Foreground blood drips (more for heavier effect)
+       ========================================================= -->
+  <div class="blood-drip" aria-hidden="true"></div>
+  <div class="blood-drip" aria-hidden="true"></div>
+  <div class="blood-drip" aria-hidden="true"></div>
+  <div class="blood-drip" aria-hidden="true"></div>
+  <div class="blood-drip" aria-hidden="true"></div>
+  <div class="blood-drip" aria-hidden="true"></div>
+  <div class="blood-drip" aria-hidden="true"></div>
+  <div class="blood-drip" aria-hidden="true"></div>
 
-  <!-- Audio background -->
-  <audio autoplay loop>
+  <!-- =========================================================
+       Ambience: whispering audio (loop)
+       ========================================================= -->
+  <audio autoplay loop aria-hidden="true">
     <source src="https://www.fesliyanstudios.com/play-mp3/387" type="audio/mpeg">
   </audio>
 
-  <div class="noise"></div>
+  <!-- =========================================================
+       Ambient overlays
+       ========================================================= -->
+  <div class="flame-shimmer" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="embers" aria-hidden="true"></div>
+  <div class="fog" aria-hidden="true"></div>
+
+  <!-- =========================================================
+       Main content
+       ========================================================= -->
   <main class="wrap">
-    <section class="panel">
+    <section class="panel" aria-label="Spooky panel">
+      <div class="panel-border" aria-hidden="true"></div>
       <div class="content">
+        <div class="title-flame" aria-hidden="true"></div>
+        <div class="hover-aura" id="aura" aria-hidden="true"></div>
+
         <h1 class="title">The Blast File</h1>
-        <div id="story" class="story">
+        <p class="subtitle">Enter if you dare.</p>
+
+        <!-- Story section -->
+        <div id="story" class="story" aria-live="polite">
+          <!-- Initial split-second trap message -->
           <div id="line" class="line">Nm trying to save you don't go anywhere</div>
-          <button id="next" style="display:none;">Next</button>
+
+          <!-- Controls -->
+          <div>
+            <button id="next" class="btn" style="display:none;" aria-label="Next">Next</button>
+          </div>
+
+          <!-- Footer tag -->
+          <div class="footer" aria-hidden="true">
+            <span class="divider"></span>
+            <span class="tag">The Blast File</span>
+            <span class="divider"></span>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
+  <!-- =========================================================
+       Scripts
+       ========================================================= -->
   <script>
-    const lines = [
-      "So you came",
-      "I've been waiting",
-      "You did what he told you",
-      "I have to tell you something",
-      "HA HA YOU FELL INTO IBRAHIM'S TRAP YOU THOUGHT YOU COULD GET INFORMATION????!!!?!?!"
+    // Elements
+    const line = document.getElementById('line');
+    const next = document.getElementById('next');
+    const aura = document.getElementById('aura');
+
+    // Story lines (final line is styled via .final)
+    const LINES = [
+      'So you came',
+      "I\'ve been waiting",
+      'You did what he told you',
+      'I have to tell you something',
+      "HA HA YOU FELL INTO IBRAHIM\'S TRAP YOU THOUGHT YOU COULD GET INFORMATION????!!!?!?!"
     ];
 
     let index = 0;
-    const message = document.getElementById('line');
-    const next = document.getElementById('next');
 
-    // Show trap message for 3 seconds, then switch
-    setTimeout(() => {
-      message.textContent = lines[index];
-      next.style.display = "inline-block";
-      message.style.opacity = 1;
-    }, 3000);
-
-    next.addEventListener('click', () => {
-      index++;
-      if (index < lines.length) {
-        message.textContent = lines[index];
-        message.classList.remove('final');
-        if (index === lines.length - 1) {
-          message.classList.add('final');
-        }
-      } else {
-        alert("hack detected");
-      }
+    // Hover aura follows mouse inside the content area
+    document.addEventListener('mousemove', (e) => {
+      aura.style.left = e.clientX + 'px';
+      aura.style.top  = e.clientY + 'px';
     });
+
+    // Show trap message for ~3 seconds, then reveal sequence
+    function startSequence() {
+      setTimeout(() => {
+        index = 0;
+        setLine(index);
+        next.style.display = 'inline-block';
+      }, 3000);
+    }
+
+    // Set line content with final glitch style when appropriate
+    function setLine(i) {
+      line.classList.remove('final');
+      line.style.opacity = 0;
+      // Force reflow to restart CSS animations
+      void line.offsetWidth;
+
+      line.textContent = LINES[i];
+      line.classList.add('line');
+
+      if (i === LINES.length - 1) {
+        line.classList.add('final');
+        next.textContent = 'Again?';
+      } else {
+        next.textContent = 'Next';
+      }
+
+      setTimeout(() => { line.style.opacity = 1; }, 40);
+    }
+
+    // Next button behavior (loops through lines)
+    next.addEventListener('click', () => {
+      index = (index + 1) % LINES.length;
+      setLine(index);
+    });
+
+    // Begin
+    startSequence();
   </script>
 </body>
-</html>
-``
+<HTML>
+
+  
 
 
