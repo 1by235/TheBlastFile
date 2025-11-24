@@ -1,186 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Blast File</title>
-  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@300;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --fg: #e6e6e6;
       --muted: #9aa0a6;
       --blood: #c10000;
-      --glow: rgba(255, 0, 0, 0.6);
-      --panel-bg: rgba(0,0,0,0.85);
+      --glow: rgba(0, 150, 255, 0.5);
+      --panel-bg: rgba(5, 8, 14, 0.85);
       --panel-border: rgba(255,255,255,0.08);
     }
-
-    body {
+    html, body {
+      height: 100%;
       margin: 0;
-      height: 100vh;
-      background: #000;
       color: var(--fg);
-      font-family: 'Creepster', cursive;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-family: 'Inter', sans-serif;
       overflow: hidden;
+      background: #000;
     }
-
-    /* Fire background overlay */
-    .fire {
-      position: fixed;
-      inset: 0;
-      background: url('https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif') center/cover no-repeat;
-      opacity: 0.4;
-      mix-blend-mode: screen;
-      z-index: -1;
+    .fire-wrap {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
     }
-
-    /* Blood drips */
+    .fire-fallback {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      background: url('https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif') center/cover no-repeat fixed;
+      filter: saturate(1.1) hue-rotate(190deg) brightness(1.05) contrast(1.05);
+    }
     .blood-drip {
-      position: fixed;
-      top: -160px;
-      width: 12px;
-      height: 140px;
+      position: fixed; top: -160px; width: 12px; height: 140px;
       background: linear-gradient(180deg, #6a0000 0%, #8b0000 55%, #2a0000 100%);
       border-radius: 0 0 8px 8px;
-      box-shadow: 0 10px 22px rgba(0,0,0,0.6);
       animation: drip 6s infinite;
-      opacity: 0.88;
-      z-index: 9;
+      opacity: 0.88; z-index: 9;
     }
-    .blood-drip:nth-of-type(1) { left: 10%; animation-delay: 0s; }
-    .blood-drip:nth-of-type(2) { left: 22%; animation-delay: 0.4s; }
-    .blood-drip:nth-of-type(3) { left: 36%; animation-delay: 0.8s; }
-    .blood-drip:nth-of-type(4) { left: 50%; animation-delay: 1.2s; }
-    .blood-drip:nth-of-type(5) { left: 66%; animation-delay: 1.6s; }
-    .blood-drip:nth-of-type(6) { left: 80%; animation-delay: 2.0s; }
+    .blood-drip:nth-of-type(1){left:10%;animation-delay:0s;}
+    .blood-drip:nth-of-type(2){left:22%;animation-delay:0.4s;}
+    .blood-drip:nth-of-type(3){left:36%;animation-delay:0.8s;}
+    .blood-drip:nth-of-type(4){left:50%;animation-delay:1.2s;}
+    .blood-drip:nth-of-type(5){left:66%;animation-delay:1.6s;}
+    .blood-drip:nth-of-type(6){left:80%;animation-delay:2s;}
     @keyframes drip {
-      0%   { transform: translateY(0); opacity: 0; }
-      10%  { opacity: 1; }
-      55%  { transform: translateY(520px); }
-      70%  { transform: translateY(640px); opacity: 0.85; }
-      100% { transform: translateY(820px); opacity: 0; }
+      0%{transform:translateY(0);opacity:0;}
+      10%{opacity:1;}
+      55%{transform:translateY(520px);}
+      70%{transform:translateY(640px);opacity:0.85;}
+      100%{transform:translateY(820px);opacity:0;}
     }
-
-    .panel {
-      background: var(--panel-bg);
-      padding: 2rem;
-      border: 2px solid var(--blood);
-      box-shadow: 0 0 30px var(--blood);
-      text-align: center;
-      border-radius: 10px;
-      max-width: 600px;
-      width: 90%;
-    }
-
-    input[type="password"] {
-      padding: 0.5rem;
-      font-size: 1.2rem;
-      border: 2px solid var(--blood);
-      background: #111;
-      color: var(--fg);
-      margin-top: 1rem;
-    }
-
-    button {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
-      background: var(--blood);
-      border: none;
-      color: #fff;
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-
-    .line {
-      font-size: 2rem;
-      margin-top: 1rem;
-      opacity: 0;
-      animation: flicker 2s infinite;
-    }
-
-    .final {
-      color: var(--blood);
-      text-shadow: 0 0 10px var(--blood), 0 0 20px #ff0000;
-      animation: glitch 1s infinite;
-    }
-
-    @keyframes flicker {
-      0%,100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    @keyframes glitch {
-      0% { transform: none; }
-      20% { transform: translate(-2px,2px); }
-      40% { transform: translate(2px,-2px); }
-      60% { transform: translate(-1px,1px); }
-      80% { transform: translate(1px,-1px); }
-      100% { transform: none; }
-    }
+    .wrap {display:grid;place-items:center;height:100%;padding:2.6rem;position:relative;z-index:10;}
+    .panel {width:min(900px,94vw);border-radius:18px;background:var(--panel-bg);
+      box-shadow:0 0 0 1px var(--panel-border),0 10px 45px -10px rgba(0,0,0,0.85),0 0 60px -10px var(--glow);
+      backdrop-filter:blur(10px);position:relative;overflow:hidden;}
+    .content {position:relative;z-index:1;padding:2.4rem;text-align:center;}
+    .title {font-family:'Creepster',cursive;font-size:clamp(2.6rem,5.8vw,4.9rem);color:var(--fg);
+      text-shadow:0 0 8px var(--glow),0 0 16px rgba(0,150,255,0.25);}
+    .subtitle {color:var(--muted);font-weight:300;margin:0 0 1.8rem 0;}
+    .story {display:grid;gap:1.25rem;margin-top:0.4rem;min-height:230px;align-items:start;justify-items:center;}
+    .line {font-family:'Creepster',cursive;font-size:clamp(1.45rem,3.8vw,2.25rem);color:var(--fg);
+      text-shadow:0 0 4px rgba(255,255,255,0.06),0 0 10px rgba(0,150,255,0.16);
+      animation:appear 460ms ease forwards,flicker 6s linear infinite;opacity:0;}
+    @keyframes appear {from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes flicker {0%,100%{opacity:1;}10%{opacity:0.93;}35%{opacity:0.94;}70%{opacity:0.97;}}
+    .final {color:var(--blood);text-shadow:0 0 14px rgba(193,0,0,0.92),0 0 34px rgba(0,150,255,0.35);
+      animation:glitch 1.8s infinite,appear 460ms ease forwards;}
+    @keyframes glitch {0%{transform:none;}20%{transform:translate(-2px,2px);}40%{transform:translate(2px,-2px);}
+      60%{transform:translate(-1px,1px);}80%{transform:translate(1px,-1px);}100%{transform:none;}}
+    .btn {padding:0.92rem 1.18rem;border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:var(--fg);
+      background:linear-gradient(180deg,rgba(18,18,28,0.97) 0%,rgba(10,10,16,0.97) 100%);cursor:crosshair;}
+    .footer {margin-top:1.6rem;display:flex;align-items:center;justify-content:center;gap:0.75rem;color:var(--muted);}
+    .tag {font-family:'Creepster',cursive;color:var(--fg);text-shadow:0 0 10px var(--glow);}
+    .divider {width:28px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);}
   </style>
 </head>
 <body>
-  <div class="fire"></div>
-  <div class="blood-drip"></div>
-  <div class="blood-drip"></div>
-  <div class="blood-drip"></div>
-  <div class="blood-drip"></div>
-  <div class="blood-drip"></div>
-  <div class="blood-drip"></div>
-
-  <div class="panel">
-    <h1>The Blast File</h1>
-    <p>Enter the password to unlock...</p>
-    <input type="password" id="pw" placeholder="Password">
-    <button onclick="checkPassword()">Unlock</button>
-    <div id="story"></div>
-  </div>
-
-  <!-- Whispering ambience -->
-  <audio autoplay loop>
-    <source src="https://www.fesliyanstudios.com/play-mp3/387" type="audio/mpeg">
-  </audio>
-
+  <div class="fire-wrap"><div class="fire-fallback"></div></div>
+  <div class="blood-drip"></div><div class="blood-drip"></div><div class="blood-drip"></div>
+  <div class="blood-drip"></div><div class="blood-drip"></div><div class="blood-drip"></div>
+  <audio autoplay loop><source src="https://www.fesliyanstudios.com/play-mp3/387" type="audio/mpeg"></audio>
+  <main class="wrap">
+    <section class="panel">
+      <div class="content">
+        <h1 class="title">The Blast File</h1>
+        <p class="subtitle">Enter if you dare.</p>
+        <div id="story" class="story">
+          <div id="line" class="line">Nm trying to save you don't go anywhere</div>
+          <div><button id="next" class="btn" style="display:none;">Next</button></div>
+          <div class="footer"><span class="divider"></span><span class="tag">The Blast File</span><span class="divider"></span></div>
+        </div>
+      </div>
+    </section>
+  </main>
   <script>
-    const story = document.getElementById('story');
-    const lines = [
-      "So you came",
+    const line = document.getElementById('line');
+    const next = document.getElementById('next');
+    const LINES = [
+      'So you came',
       "I've been waiting",
-      "You did what he told you",
-      "I have to tell you something",
-      "HA HA YOU FELL INTO IBRAHIM'S TRAP!!!"
+      'You did what he told you',
+      'I have to tell you something',
+      "HA HA YOU FELL INTO IBRAHIM'S TRAP YOU THOUGHT YOU COULD GET INFORMATION????!!!?!?!"
     ];
-
-    function checkPassword() {
-      const pw = document.getElementById('pw').value;
-      if (pw === "darkfire") {
-        runStory();
+    let index = 0;
+    function setLine(i) {
+      line.classList.remove('final');
+      line.style.opacity = 0;
+      void line.offsetWidth;
+      line.textContent = LINES[i];
+      if (i === LINES.length - 1) {
+        line.classList.add('final');
+        next.textContent = 'Again?';
       } else {
-        story.innerHTML = '<div class="line final">WRONG PASSWORD... THE TRAP IS SET!</div>';
-        const scream = new Audio("https://www.fesliyanstudios.com/play-mp3/6666");
-        scream.play();
+        next.textContent = 'Next';
       }
+      setTimeout(() => { line.style.opacity = 1; }, 40);
+            line.style.opacity = 1;
     }
+    next.style.display = 'inline-block';
+  }
 
-    function runStory() {
-      let i = 0;
-      story.innerHTML = "";
-      setTimeout(() => {
-        const interval = setInterval(() => {
-          const div = document.createElement("div");
-          div.className = "line" + (i === lines.length-1 ? " final" : "");
-          div.textContent = lines[i];
-          story.appendChild(div);
-          i++;
-          if (i >= lines.length) clearInterval(interval);
-        }, 1000);
-      }, 500); // 0.5 second trap delay
+  next.addEventListener('click', () => {
+    index++;
+    if (index >= LINES.length) {
+      index = 0;
     }
-  </script>
+    setLine(index);
+  });
+
+  // Start with the first line visible
+  setLine(0);
+</script>
 </body>
 </html>
+
+
 
 
       
